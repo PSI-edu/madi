@@ -318,7 +318,7 @@ def _do_check_filename_consistency(previous_product: pds4.BasicProduct, delta_pr
 
     if not filename_matches(previous_label_filename, delta_label_filename):
         errors.append(ValidationError(
-            f"New product has inconsistent label filename. Was: {previous_label_filename}, Now: {delta_label_filename}", "product_inconsistent_filenames"))
+            f"New product has inconsistent label filename. Was: {previous_label_filename}, Now: {delta_label_filename}", "product_inconsistent_filenames", "warning"))
     else:
         logger.info(f"Label Filename check for {delta_product.lidvid()}: OK. Original Filename: {previous_label_filename}, Delta Filename: {delta_label_filename}")
 
