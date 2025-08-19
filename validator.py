@@ -334,7 +334,7 @@ def _do_check_filename_consistency(previous_product: pds4.BasicProduct, delta_pr
 
     if previous_unversioned_filenames != delta_unversioned_filenames:
         errors.append(ValidationError(
-            f"New product has inconsistent data filenames. Was: {','.join(previous_data_filenames)}, Now: {','.join(delta_data_filenames)}", "data_inconsistent_filename"))
+            f"New product has inconsistent data filenames. Was: {','.join(previous_data_filenames)}, Now: {','.join(delta_data_filenames)}", "data_inconsistent_filename", "warning"))
     else:
         logger.info(f"Data filename check for {delta_product.lidvid()}: OK. Filenames: {','.join(delta_data_filenames)}")
     return errors
