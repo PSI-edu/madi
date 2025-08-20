@@ -57,8 +57,8 @@ def supersede(previous_fullbundle: pds4.FullBundle, delta_fullbundle: pds4.FullB
     logger.info(f"Integrate {previous_bundle_directory} "
                 f"with delta data from {delta_bundle_directory} into {merged_bundle_directory}")
 
-    previous_bundles_to_keep, previous_bundles_to_supersede, _ = find_products_to_supersede(previous_fullbundle.bundles,
-                                                                                         delta_fullbundle.bundles)
+    previous_bundles_to_keep, previous_bundles_to_supersede, _, _ = find_products_to_supersede(
+        previous_fullbundle.bundles, delta_fullbundle.bundles)
     report_superseded(previous_bundles_to_keep,
                       previous_bundles_to_supersede,
                       delta_fullbundle.bundles,
@@ -67,8 +67,8 @@ def supersede(previous_fullbundle: pds4.FullBundle, delta_fullbundle: pds4.FullB
                       merged_bundle_directory,
                       "Bundles")
 
-    previous_collections_to_keep, previous_collections_to_supersede, new_collections = find_products_to_supersede(previous_fullbundle.collections,
-                                                                                                 delta_fullbundle.collections)
+    previous_collections_to_keep, previous_collections_to_supersede, new_collections, _ = find_products_to_supersede(
+        previous_fullbundle.collections, delta_fullbundle.collections)
     report_superseded(previous_collections_to_keep,
                       previous_collections_to_supersede,
                       delta_fullbundle.collections,
@@ -77,8 +77,8 @@ def supersede(previous_fullbundle: pds4.FullBundle, delta_fullbundle: pds4.FullB
                       merged_bundle_directory,
                       "Collections")
 
-    previous_products_to_keep, previous_products_to_supersede, _ = find_products_to_supersede(previous_fullbundle.products,
-                                                                                           delta_fullbundle.products)
+    previous_products_to_keep, previous_products_to_supersede, _, previous_products_to_increment = \
+        find_products_to_supersede(previous_fullbundle.products, delta_fullbundle.products)
     report_superseded(previous_products_to_keep,
                       previous_products_to_supersede,
                       delta_fullbundle.products,
@@ -330,7 +330,7 @@ def copy_to_path(src_path: str, dest_path: str, dry: bool):
 
 
 def find_products_to_supersede(previous_products: List[pds4.Pds4Product],
-                               delta_products: List[pds4.Pds4Product]) -> Tuple[List[pds4.Pds4Product], List[pds4.Pds4Product], List[pds4.Pds4Product]]:
+                               delta_products: List[pds4.Pds4Product]) -> Tuple[List[pds4.Pds4Product], List[pds4.Pds4Product], List[pds4.Pds4Product], List[pds4.Pds4Product]]:
     """
     Compares products in the delta bundle to the existing products, and determines which of the existing products should
     be superseded.
@@ -339,11 +339,15 @@ def find_products_to_supersede(previous_products: List[pds4.Pds4Product],
     :return: A tuple consisting of a list of products to keep as-is and a list of products that should be superseded.
     """
     delta_product_lids = set(x.lidvid().lid for x in delta_products)
+    delta_product_versions = dict((x.lidvid().lid, x.lidvid().vid) for x in delta_products)
     previous_product_lids = set(x.lidvid().lid for x in previous_products)
     previous_products_to_keep = [x for x in previous_products if
                                  x.lidvid().lid not in delta_product_lids]
+    products_to_increment = [p for p in previous_products
+                             if p.lidvid().lid in delta_product_versions
+                             and p.lidvid().vid.major == delta_product_versions[p.lidvid().lid].major]
     previous_products_to_supersede = [x for x in previous_products if
                                       x.lidvid().lid in delta_product_lids]
     new_products = [x for x in delta_products if x.lidvid().lid not in previous_products]
-    return previous_products_to_keep, previous_products_to_supersede, new_products
+    return previous_products_to_keep, previous_products_to_supersede, new_products, products_to_increment
 
