@@ -112,7 +112,10 @@ def supersede(previous_fullbundle: pds4.FullBundle, delta_fullbundle: pds4.FullB
 
     do_copy_data(previous_products_to_keep, previous_bundle_directory, merged_bundle_directory, dry)
     do_copy_data(previous_products_to_supersede, previous_bundle_directory, merged_bundle_directory, dry, superseded=True)
-    do_copy_data(delta_fullbundle.products, delta_bundle_directory, merged_bundle_directory, dry)
+    do_copy_data(delta_fullbundle.products, delta_bundle_directory, merged_bundle_directory, dry,
+                 alternate_base=previous_bundle_directory,
+                 minor_updates=set(str(x.lidvid().lid) for x in previous_products_to_increment)
+                 )
 
     do_copy_readme(previous_fullbundle.superseded_bundles, previous_bundle_directory, merged_bundle_directory, superseded=True)
     do_copy_readme(previous_fullbundle.bundles, previous_bundle_directory, merged_bundle_directory, superseded=True)
@@ -293,7 +296,7 @@ def do_copy_inventory(collections: Iterable[pds4.Pds4Product], old_base, new_bas
             logger.info(f'Skipping non-collection product: {c.lidvid()}')
 
 
-def do_copy_data(products: Iterable[pds4.Pds4Product], old_base, new_base, dry: bool, superseded=False) -> None:
+def do_copy_data(products: Iterable[pds4.Pds4Product], old_base, new_base, dry: bool, superseded=False, alternate_base=None, minor_updates=()) -> None:
     """
     Copies the data files of a basic product to another directory
     """
@@ -303,8 +306,14 @@ def do_copy_data(products: Iterable[pds4.Pds4Product], old_base, new_base, dry: 
             for d in p.data_paths:
                 vid = p.lidvid().vid
                 versioned_path = paths.generate_product_path(d, superseded=superseded, vid=vid)
-                new_path = paths.relocate_path(versioned_path, old_base, new_base)
-                copy_to_path(d, new_path, dry)
+                if str(p.lidvid().lid) in minor_updates:
+                    logger.info(f"Minor update for {p.lidvid()}, copying from {alternate_base} instead")
+                    alternate_path = paths.relocate_path(d, old_base, alternate_base)
+                    new_path = paths.relocate_path(versioned_path, old_base, new_base)
+                    copy_to_path(alternate_path, new_path, dry)
+                else:
+                    new_path = paths.relocate_path(versioned_path, old_base, new_base)
+                    copy_to_path(d, new_path, dry)
         else:
             logger.info(f'Skipping non-basic product: {p.lidvid()}')
 
