@@ -62,6 +62,7 @@ def supersede(previous_fullbundle: pds4.FullBundle, delta_fullbundle: pds4.FullB
     report_superseded(previous_bundles_to_keep,
                       previous_bundles_to_supersede,
                       delta_fullbundle.bundles,
+                      [],
                       previous_bundle_directory,
                       delta_bundle_directory,
                       merged_bundle_directory,
@@ -72,6 +73,7 @@ def supersede(previous_fullbundle: pds4.FullBundle, delta_fullbundle: pds4.FullB
     report_superseded(previous_collections_to_keep,
                       previous_collections_to_supersede,
                       delta_fullbundle.collections,
+                      [],
                       previous_bundle_directory,
                       delta_bundle_directory,
                       merged_bundle_directory,
@@ -81,6 +83,7 @@ def supersede(previous_fullbundle: pds4.FullBundle, delta_fullbundle: pds4.FullB
         find_products_to_supersede(previous_fullbundle.products, delta_fullbundle.products)
     report_superseded(previous_products_to_keep,
                       previous_products_to_supersede,
+                      previous_products_to_increment,
                       delta_fullbundle.products,
                       previous_bundle_directory,
                       delta_bundle_directory,
@@ -196,6 +199,7 @@ def generate_collection(previous_collection: pds4.CollectionProduct,
 
 def report_superseded(products_to_keep: List[pds4.Pds4Product],
                       products_to_supersede: List[pds4.Pds4Product],
+                      minor_updates: List[pds4.Pds4Product],
                       delta_products: List[pds4.Pds4Product],
                       previous_bundle_dir,
                       delta_bundle_dir,
@@ -208,6 +212,7 @@ def report_superseded(products_to_keep: List[pds4.Pds4Product],
     report_new_paths(products_to_supersede, previous_bundle_dir, merged_bundle_dir, True)
     logger.info(f"{label} to keep: {[str(x.lidvid()) for x in products_to_keep]}")
     report_new_paths(products_to_keep, previous_bundle_dir, merged_bundle_dir)
+    logger.info(f"{label} with minor updates: {[str(x.lidvid()) for x in minor_updates]}")
     logger.info(f"New {label.lower()}: {[str(x.lidvid()) for x in delta_products]}")
     report_new_paths(delta_products, delta_bundle_dir, merged_bundle_dir)
 
