@@ -162,13 +162,16 @@ def patch_bundle_member_entries(entries: List[label.BundleMemberEntry], collecti
                 result.append(entry)
     return result, issues
 
-def check_vid_presence(lidvids: Iterable[LidVid]) -> Iterable[ValidationError]:
+def check_vid_presence(lidvids: Iterable[LidVid], error_type: str = "missing_vid_From_lidvid" ,severity: str = "error") -> Iterable[ValidationError]:
     """
     Checl that a LIDVID actually has a VID. The parser is tolerant, and will return a negative VID if one isn't supplied
     :param lidvids: A list of LIDVIDs
+    :param lidvids: The error type to use. This can depend on the context
+    :param severity: The severity of the error. This can depend on the context
+
     :return: A list of validation errors
     """
-    return (ValidationError(f"Vid not provided for {x.lid}", "missing_vid_From_lidvid") for x in lidvids if x.vid.major < 0 and x.lid.bundle != "context" and x.lid.collection != "xml_schema")
+    return (ValidationError(f"Vid not provided for {x.lid}", error_type, severity) for x in lidvids if x.vid.major < 0 and x.lid.bundle != "context")
 
 
 def _check_lidvid_increment(previous_lidvid: LidVid, delta_lidvid: LidVid, same=True, minor=True, major=True) -> List[ValidationError]:
