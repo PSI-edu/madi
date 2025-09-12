@@ -162,13 +162,16 @@ def patch_bundle_member_entries(entries: List[label.BundleMemberEntry], collecti
                 result.append(entry)
     return result, issues
 
-def check_vid_presence(lidvids: Iterable[LidVid]) -> Iterable[ValidationError]:
+def check_vid_presence(lidvids: Iterable[LidVid], error_type: str = "missing_vid_From_lidvid" ,severity: str = "error") -> Iterable[ValidationError]:
     """
     Checl that a LIDVID actually has a VID. The parser is tolerant, and will return a negative VID if one isn't supplied
     :param lidvids: A list of LIDVIDs
+    :param lidvids: The error type to use. This can depend on the context
+    :param severity: The severity of the error. This can depend on the context
+
     :return: A list of validation errors
     """
-    return (ValidationError(f"Vid not provided for {x.lid}", "missing_vid_From_lidvid") for x in lidvids if x.vid.major < 0 and x.lid.bundle != "context")
+    return (ValidationError(f"Vid not provided for {x.lid}", error_type, severity) for x in lidvids if x.vid.major < 0 and x.lid.bundle != "context")
 
 
 def _check_lidvid_increment(previous_lidvid: LidVid, delta_lidvid: LidVid, same=True, minor=True, major=True) -> List[ValidationError]:
@@ -276,8 +279,13 @@ def _compare_modifcation_detail(pair: Tuple[labeltypes.ModificationDetail, label
     delta_detail: labeltypes.ModificationDetail
     previous_detail, delta_detail = pair
     if not previous_detail == delta_detail:
-        errors.append(ValidationError(f'{delta_lidvid} has a mismatched modification detail from {prev_lidvid}. '
-                                      f'The old modification detail was {previous_detail}, and the new one was {delta_detail}', "mismatched_modification_detail"))
+        if previous_detail.equivalent(delta_detail):
+            errors.append(ValidationError(f'{delta_lidvid} has a partially mismatched modification detail from {prev_lidvid}. '
+                                          f'The old modification detail was {previous_detail}, and the new one was {delta_detail}', "partially_mismatched_modification_detail", "warning"))
+
+        else:
+            errors.append(ValidationError(f'{delta_lidvid} has a mismatched modification detail from {prev_lidvid}. '
+                                          f'The old modification detail was {previous_detail}, and the new one was {delta_detail}', "mismatched_modification_detail"))
     return errors
 
 

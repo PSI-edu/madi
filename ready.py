@@ -47,8 +47,11 @@ def do_checkready(previous_fullbundle: pds4.FullBundle,
     errors.extend(validator.check_bundle_against_previous(previous_fullbundle.bundles[0], delta_fullbundle.bundles[0], jaxa, previous_fullbundle.collections))
     errors.extend(validator.check_bundle_against_collections(delta_fullbundle.bundles[0], delta_fullbundle.collections))
 
-    for collection in delta_fullbundle.collections + previous_fullbundle.collections:
+    for collection in delta_fullbundle.collections:
         errors.extend(validator.check_vid_presence(collection.inventory.products()))
+
+    for collection in previous_fullbundle.collections:
+        errors.extend(validator.check_vid_presence(collection.inventory.products(), "missing_vid_in_existing_product_lidvid", "warning"))
 
     if not any(e.severity == "error" for e in errors):
         for delta_collection in delta_fullbundle.collections:

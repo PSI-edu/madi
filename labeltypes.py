@@ -2,6 +2,7 @@ import itertools
 from dataclasses import dataclass
 from typing import Optional, Iterable, List
 import lids
+import re
 
 @dataclass()
 class DocumentFile:
@@ -99,6 +100,10 @@ class ModificationDetail:
     modification_date: str
     description: str
 
+    def equivalent(self, other: "ModificationDetail"):
+        return self.version_id == other.version_id and \
+            self.modification_date == other.modification_date and \
+            re.sub(r"[\s\n]+", "", self.description) == re.sub(r"[\s\n]+", "", other.description)
 
 @dataclass
 class ModificationHistory:
