@@ -276,8 +276,13 @@ def _compare_modifcation_detail(pair: Tuple[labeltypes.ModificationDetail, label
     delta_detail: labeltypes.ModificationDetail
     previous_detail, delta_detail = pair
     if not previous_detail == delta_detail:
-        errors.append(ValidationError(f'{delta_lidvid} has a mismatched modification detail from {prev_lidvid}. '
-                                      f'The old modification detail was {previous_detail}, and the new one was {delta_detail}', "mismatched_modification_detail"))
+        if previous_detail.equivalent(delta_detail):
+            errors.append(ValidationError(f'{delta_lidvid} has a partially mismatched modification detail from {prev_lidvid}. '
+                                          f'The old modification detail was {previous_detail}, and the new one was {delta_detail}', "mismatched_modification_detail", "warning"))
+
+        else:
+            errors.append(ValidationError(f'{delta_lidvid} has a mismatched modification detail from {prev_lidvid}. '
+                                          f'The old modification detail was {previous_detail}, and the new one was {delta_detail}', "partially_mismatched_modification_detail"))
     return errors
 
 
