@@ -194,7 +194,7 @@ def _check_lidvid_increment(previous_lidvid: LidVid, delta_lidvid: LidVid, same=
             if warn:
                 errors.append(
                     ValidationError(f"Unusual lidvid: {delta_lidvid}. Should be one of {[x.__str__() for x in allowed]}, but may be different for secondary members",
-                                    "nonstandard_lidvid increment"))
+                                    "nonstandard_lidvid_increment"))
             else:
                 errors.append(ValidationError(f"Invalid lidvid: {delta_lidvid}. Must be one of {[x.__str__() for x in allowed]}", "incorrectly_incremented_lidvid"))
     return errors
