@@ -95,7 +95,8 @@ def _check_dict_increment(previous_lidvids: Dict[Lid, pds4.InventoryItem], delta
         if lid in previous_lidvids.keys():
             lidvid: LidVid = delta_lidvids[lid].lidvid
             previous_lidvid: LidVid = previous_lidvids[lid].lidvid
-            errors.extend(_check_lidvid_increment(previous_lidvid, lidvid, same=False))
+            warn: bool = previous_lidvids[lid].status == "S"
+            errors.extend(_check_lidvid_increment(previous_lidvid, lidvid, same=False, warn=True))
     return errors
 
 
@@ -174,7 +175,7 @@ def check_vid_presence(lidvids: Iterable[LidVid], error_type: str = "missing_vid
     return (ValidationError(f"Vid not provided for {x.lid}", error_type, severity) for x in lidvids if x.vid.major < 0 and x.lid.bundle != "context")
 
 
-def _check_lidvid_increment(previous_lidvid: LidVid, delta_lidvid: LidVid, same=True, minor=True, major=True) -> List[ValidationError]:
+def _check_lidvid_increment(previous_lidvid: LidVid, delta_lidvid: LidVid, same=True, minor=True, major=True, warn=False) -> List[ValidationError]:
     """
     Check that the provided new_lidvid is an allowable increment from the previous LIDVID.
     There are three possible ways to increment a LIDVID that we recognize:
@@ -190,7 +191,12 @@ def _check_lidvid_increment(previous_lidvid: LidVid, delta_lidvid: LidVid, same=
                   ([previous_lidvid.inc_minor()] if minor else []) + \
                   ([previous_lidvid.inc_major()] if major else [])
         if delta_lidvid not in allowed:
-            errors.append(ValidationError(f"Invalid lidvid: {delta_lidvid}. Must be one of {[x.__str__() for x in allowed]}", "incorrectly_incremented_lidvid"))
+            if warn:
+                errors.append(
+                    ValidationError(f"Unusual lidvid: {delta_lidvid}. Should be one of {[x.__str__() for x in allowed]}, but may be different for secondary members",
+                                    "nonstandard_lidvid increment"))
+            else:
+                errors.append(ValidationError(f"Invalid lidvid: {delta_lidvid}. Must be one of {[x.__str__() for x in allowed]}", "incorrectly_incremented_lidvid"))
     return errors
 
 
