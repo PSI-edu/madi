@@ -68,8 +68,8 @@ def check_collection_against_previous(previous_collection: pds4.CollectionProduc
 def _check_modification_history(previous_collection: pds4.Pds4Product, delta_collection: pds4.Pds4Product):
     logger.info(f"Checking delta collection label {delta_collection.lidvid()} against previous collection {previous_collection.lidvid()}")
     errors = []
-    errors.extend(_check_for_modification_history(previous_collection.label))
-    errors.extend(_check_for_modification_history(delta_collection.label))
+    errors.extend(_check_for_modification_history(previous_collection.label, True))
+    errors.extend(_check_for_modification_history(delta_collection.label, False))
     if not any(e.severity == "error" for e in errors):
         errors.extend(_check_for_preserved_modification_history(previous_collection.label, delta_collection.label))
     return errors
@@ -214,7 +214,7 @@ def _check_collection_duplicates(previous_collection: pds4.CollectionProduct,
     return errors
 
 
-def _check_for_modification_history(lbl: label.ProductLabel) -> List[ValidationError]:
+def _check_for_modification_history(lbl: label.ProductLabel, warn_on_empty: bool) -> List[ValidationError]:
     """
     Verify that the modification history for a product exists and is current
     """
@@ -223,7 +223,12 @@ def _check_for_modification_history(lbl: label.ProductLabel) -> List[ValidationE
     lidvid = lbl.identification_area.lidvid
     vid = lidvid.vid.__str__()
     if lbl.identification_area.modification_history is None:
-        errors.append(ValidationError(f"{lidvid} does not have a modification history", "missing_modification_history"))
+        if warn_on_empty:
+            errors.append(
+                ValidationError(f"{lidvid} does not have a modification history", "warn_missing_modification_history", "warning"))
+        else:
+            errors.append(
+                ValidationError(f"{lidvid} does not have a modification history", "missing_modification_history"))
     else:
         versions = [detail.version_id for detail in lbl.identification_area.modification_history.modification_details]
         if vid not in versions:
