@@ -252,8 +252,8 @@ def _check_for_preserved_modification_history(previous_collection: label.Product
     errors = []
     logger.info(f'Checking consistency of modification history for {delta_collection.identification_area.lidvid} against {previous_collection.identification_area.lidvid}')
 
-    previous_details = sorted(previous_collection.identification_area.modification_history.modification_details, key=_extract_vid)
-    delta_details = sorted(delta_collection.identification_area.modification_history.modification_details, key=_extract_vid)
+    previous_details = sorted(previous_collection.identification_area.modification_history.modification_details, key=_extract_vid) if previous_collection.identification_area.modification_history else []
+    delta_details = sorted(delta_collection.identification_area.modification_history.modification_details, key=_extract_vid) if delta_collection.identification_area.modification_history else []
 
     delta_lidvid = delta_collection.identification_area.lidvid
     prev_lidvid = previous_collection.identification_area.lidvid
