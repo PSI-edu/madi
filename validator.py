@@ -270,9 +270,13 @@ def _check_for_preserved_modification_history(previous_collection: label.Product
         errors.append(ValidationError(f"{delta_lidvid} must contain at least as many modification details as {prev_lidvid}", "not_enough_modification_details"))
 
     if delta_vid > prev_vid:
-        if len(delta_details) != len(previous_details) + 1 and len(previous_details) > 0:
-            errors.append(ValidationError(f"{delta_lidvid} must contain one more modification detail than {prev_lidvid}, unless the {prev_lidvid} had no history", "incorrect_modification_detail_count_for_superseding_product"))
-
+        if len(delta_details) != len(previous_details) + 1:
+            if len(previous_details) > 0:
+                errors.append(ValidationError(f"{delta_lidvid} must contain one more modification detail than {prev_lidvid}, unless the {prev_lidvid} had no history", "incorrect_modification_detail_count_for_superseding_product"))
+            else:
+                errors.append(ValidationError(
+            f"{delta_lidvid} contains more than one more modification detail than {prev_lidvid}. Since {prev_lidvid} had no history, this will be tolerated to get it caught up",
+            "additonal_modification_detail_for_empty_history", "warning"))
     if delta_vid == prev_vid:
         if len(delta_details) != len(previous_details):
             errors.append(ValidationError(f"{delta_lidvid} must contain exactly as many modification details as {prev_lidvid}", "incorrect_modification_detail_count_for_non_superseding_product"))
