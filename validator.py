@@ -68,8 +68,8 @@ def check_collection_against_previous(previous_collection: pds4.CollectionProduc
 def _check_modification_history(previous_collection: pds4.Pds4Product, delta_collection: pds4.Pds4Product):
     logger.info(f"Checking delta collection label {delta_collection.lidvid()} against previous collection {previous_collection.lidvid()}")
     errors = []
-    errors.extend(_check_for_modification_history(previous_collection.label))
-    errors.extend(_check_for_modification_history(delta_collection.label))
+    errors.extend(_check_for_modification_history(previous_collection.label, True))
+    errors.extend(_check_for_modification_history(delta_collection.label, False))
     if not any(e.severity == "error" for e in errors):
         errors.extend(_check_for_preserved_modification_history(previous_collection.label, delta_collection.label))
     return errors
@@ -214,7 +214,7 @@ def _check_collection_duplicates(previous_collection: pds4.CollectionProduct,
     return errors
 
 
-def _check_for_modification_history(lbl: label.ProductLabel) -> List[ValidationError]:
+def _check_for_modification_history(lbl: label.ProductLabel, warn_on_empty: bool) -> List[ValidationError]:
     """
     Verify that the modification history for a product exists and is current
     """
@@ -223,7 +223,12 @@ def _check_for_modification_history(lbl: label.ProductLabel) -> List[ValidationE
     lidvid = lbl.identification_area.lidvid
     vid = lidvid.vid.__str__()
     if lbl.identification_area.modification_history is None:
-        errors.append(ValidationError(f"{lidvid} does not have a modification history", "missing_modification_history"))
+        if warn_on_empty:
+            errors.append(
+                ValidationError(f"{lidvid} does not have a modification history", "warn_missing_modification_history", "warning"))
+        else:
+            errors.append(
+                ValidationError(f"{lidvid} does not have a modification history", "missing_modification_history"))
     else:
         versions = [detail.version_id for detail in lbl.identification_area.modification_history.modification_details]
         if vid not in versions:
@@ -247,8 +252,8 @@ def _check_for_preserved_modification_history(previous_collection: label.Product
     errors = []
     logger.info(f'Checking consistency of modification history for {delta_collection.identification_area.lidvid} against {previous_collection.identification_area.lidvid}')
 
-    previous_details = sorted(previous_collection.identification_area.modification_history.modification_details, key=_extract_vid)
-    delta_details = sorted(delta_collection.identification_area.modification_history.modification_details, key=_extract_vid)
+    previous_details = sorted(previous_collection.identification_area.modification_history.modification_details, key=_extract_vid) if previous_collection.identification_area.modification_history else []
+    delta_details = sorted(delta_collection.identification_area.modification_history.modification_details, key=_extract_vid) if delta_collection.identification_area.modification_history else []
 
     delta_lidvid = delta_collection.identification_area.lidvid
     prev_lidvid = previous_collection.identification_area.lidvid
@@ -266,8 +271,12 @@ def _check_for_preserved_modification_history(previous_collection: label.Product
 
     if delta_vid > prev_vid:
         if len(delta_details) != len(previous_details) + 1:
-            errors.append(ValidationError(f"{delta_lidvid} must contain one more modification detail than {prev_lidvid}", "incorrect_modification_detail_count_for_superseding_product"))
-
+            if len(previous_details) > 0:
+                errors.append(ValidationError(f"{delta_lidvid} must contain one more modification detail than {prev_lidvid}, unless the {prev_lidvid} had no history", "incorrect_modification_detail_count_for_superseding_product"))
+            else:
+                errors.append(ValidationError(
+            f"{delta_lidvid} contains more than one more modification detail than {prev_lidvid}. Since {prev_lidvid} had no history, this will be tolerated to get it caught up",
+            "additional_modification_detail_for_empty_history", "warning"))
     if delta_vid == prev_vid:
         if len(delta_details) != len(previous_details):
             errors.append(ValidationError(f"{delta_lidvid} must contain exactly as many modification details as {prev_lidvid}", "incorrect_modification_detail_count_for_non_superseding_product"))
