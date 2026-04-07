@@ -63,6 +63,19 @@ def extract_product_ancillary(product_ancillary: bs4.Tag, checksum: str) -> Prod
         file_areas=[_extract_file_area(f) for f in product_ancillary.find_all("File_Area_Ancillary")]
     )
 
+def extract_product_browse(product_browse: bs4.Tag, checksum: str) -> ProductLabel:
+    """
+    Extracts keywords from the Product_Observational element
+    """
+    return ProductLabel(
+        checksum=checksum,
+        identification_area=_extract(product_browse.Identification_Area, _extract_identification_area),
+        context_area=_extract(product_browse.Context_Area, _extract_context_area),
+        discipline_area=_extract(product_browse.Discipline_Area, _extract_discipline_area),
+        file_areas=[_extract_file_area(f) for f in product_browse.find_all("File_Area_Browse")]
+    )
+
+
 
 def extract_product_context(product_context: bs4.Tag, checksum: str) -> ProductLabel:
     """
