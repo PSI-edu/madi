@@ -18,13 +18,13 @@ def load_local_bundle(path: str) -> pds4.FullBundle:
     label_paths = [x for x in filepaths if x.endswith(".xml")]
     product_types = {x: extract_product_type(x) for x in label_paths}
 
-    collections = [localclient.fetchcollection(path)
+    products = [localclient.fetchproduct(path) for path in label_paths if is_basic(product_types[path]) and not is_superseded(path)]
+    collections = [localclient.fetchcollection(path, products)
                    for path in label_paths if is_collection(product_types[path]) and not is_superseded(path)]
     bundles = [localclient.fetchbundle(path)
                for path in label_paths if is_bundle(product_types[path]) and not is_superseded(path)]
-    products = [localclient.fetchproduct(path) for path in label_paths if is_basic(product_types[path]) and not is_superseded(path)]
 
-    superseded_collections = [localclient.fetchcollection(path)
+    superseded_collections = [localclient.fetchcollection(path, [])
                               for path in label_paths if is_collection(product_types[path]) and is_superseded(path)]
     superseded_bundles = [localclient.fetchbundle(path)
                           for path in label_paths if is_bundle(product_types[path]) and is_superseded(path)]

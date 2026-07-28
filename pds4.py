@@ -62,14 +62,23 @@ class CollectionInventory:
         return set(x.lidvid for x in self.items.values())
 
     @staticmethod
-    def from_csv(csvdata) -> "CollectionInventory":
+    def from_csv(csvdata, products) -> "CollectionInventory":
         inventory = CollectionInventory()
         reader = csv.DictReader(csvdata.split("\r\n"), fieldnames=['status', 'lidvid'])
         for line in reader:
             status = line["status"]
             lidvid = LidVid.parse(line["lidvid"])
+            if lidvid.vid.major < 0:
+                lidvid = CollectionInventory.infer_vid(lidvid, products)
             inventory.add_item(InventoryItem(lidvid, status))
         return inventory
+
+    @staticmethod
+    def infer_vid(lidvid, products) -> LidVid:
+        vids = [p.lidvid.lid for p in products if p.lidvid.lid == lidvid.lid]
+        if vids:
+            return LidVid(lidvid.lid, max(vids))
+        return lidvid
 
     def ingest_new_inventory(self, new_inventory: "CollectionInventory") -> None:
         for item in new_inventory.items.values():

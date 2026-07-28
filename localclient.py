@@ -15,7 +15,7 @@ from pds4 import CollectionProduct, BundleProduct, BasicProduct, CollectionInven
 logger = logging.getLogger(__name__)
 
 
-def fetchcollection(path: str) -> CollectionProduct:
+def fetchcollection(path: str, products: list[BasicProduct]) -> CollectionProduct:
     """Retrieves a collection product located at the specified path"""
     logger.debug(f"Parsing collection: {path}")
     collection_label = fetchlabel(path)
@@ -26,7 +26,7 @@ def fetchcollection(path: str) -> CollectionProduct:
     else:
         with open(inventory_path, newline="") as f:
             logger.debug(f"Parsing collection inventory: {inventory_path}")
-            inventory = CollectionInventory.from_csv(f.read())
+            inventory = CollectionInventory.from_csv(f.read(), products)
 
     return CollectionProduct(collection_label, inventory, label_path=path, inventory_path=inventory_path)
 
