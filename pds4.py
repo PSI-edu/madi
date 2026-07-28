@@ -86,7 +86,7 @@ class CollectionInventory:
 
     def to_csv(self) -> str:
         return "\r\n".join(itertools.chain(
-            sorted((f'{x.status},{x.lidvid}' for x in self.items.values()))
+            sorted((f'{x.status},{x.lidvid if x.lidvid.vid.major > 0 else x.lidvid.lid}' for x in self.items.values()))
         ))
 
 
