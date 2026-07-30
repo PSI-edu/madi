@@ -124,7 +124,7 @@ def _check_bundle_increment(previous_bundle: label.ProductLabel, delta_bundle: l
     # ensure that any declared LIDVIDs actually have a VID component
     #errors.extend(check_vid_presence(previous_collection_lidvids))
     errors.extend(issues)
-    errors.extend(check_vid_presence(delta_collection_lidvids))
+    errors.extend(check_vid_presence(delta_collection_lidvids, context=str(delta_bundle.identification_area.lidvid)))
 
     # verify that all non-new (> 1.0) collections in the delta bundle also exist in the previous bundle
     for next_collection_lidvid in delta_collection_lidvids:
@@ -163,7 +163,7 @@ def patch_bundle_member_entries(entries: List[label.BundleMemberEntry], collecti
                 result.append(entry)
     return result, issues
 
-def check_vid_presence(lidvids: Iterable[LidVid], error_type: str = "missing_vid_From_lidvid" ,severity: str = "error") -> Iterable[ValidationError]:
+def check_vid_presence(lidvids: Iterable[LidVid], error_type: str = "missing_vid_From_lidvid" ,severity: str = "error", context: str = "Unknown") -> Iterable[ValidationError]:
     """
     Checl that a LIDVID actually has a VID. The parser is tolerant, and will return a negative VID if one isn't supplied
     :param lidvids: A list of LIDVIDs
@@ -172,7 +172,7 @@ def check_vid_presence(lidvids: Iterable[LidVid], error_type: str = "missing_vid
 
     :return: A list of validation errors
     """
-    return (ValidationError(f"Vid not provided for {x.lid}", error_type, severity) for x in lidvids if x.vid.major < 0 and x.lid.bundle != "context")
+    return (ValidationError(f"Vid not provided for {x.lid} at {context}" if context else f"Vid not provided for {x.lid}", error_type, severity) for x in lidvids if x.vid.major < 0 and x.lid.bundle != "context")
 
 
 def _check_lidvid_increment(previous_lidvid: LidVid, delta_lidvid: LidVid, same=True, minor=True, major=True, warn=False) -> List[ValidationError]:
