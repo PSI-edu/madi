@@ -156,7 +156,9 @@ def patch_bundle_member_entries(entries: List[label.BundleMemberEntry], collecti
             matching_collections = [x for x in collections if x.lidvid().lid == entry.lidvid().lid]
             if matching_collections:
                 matching_collection = matching_collections[0]
-                issues.append(ValidationError(f"Patched lid-reference bundle member f{entry.lid_reference} with collection LIDVID from label: {matching_collection.lidvid()}", "patched_lid_reference_with_collection_lidvid", "warning"))
+                issues.append(ValidationError(
+                    f"A member reference in this bundle was a lid reference {entry.lid_reference}. The lidvid of this member reference will be inferred using information extracted from the collection label: {matching_collection.lidvid()}",
+                    "patched_lid_reference_with_collection_lidvid", "warning"))
                 result.append(label.BundleMemberEntry(entry.member_status, entry.reference_type, None, str(matching_collection.lidvid())))
             else:
                 issues.append(ValidationError(f"Encountered lid-reference bundle member f{entry.lid_reference}. No collection was available to lookup LID", "unpatchable_lid_reference", "warning"))
